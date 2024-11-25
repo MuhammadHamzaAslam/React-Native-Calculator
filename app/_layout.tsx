@@ -11,65 +11,52 @@ import {
 const { width, height } = Dimensions.get("window");
 
 export default function RootLayout() {
-  const [displayValue, setDisplayValue] = useState("");
-  const [isResult, setIsResult] = useState(false); 
-
-  const handleButtonPress = (button: string | number) => {
-    if (button === "C") {
-      setDisplayValue("");
-      setIsResult(false);
-    } else if (button === "=") {
+  const [pressButton, setPressButton] = useState("");
+  const buttons = [ "C", "%", "Del", "/", 7, 8, 9, "x", 4, 5, 6, "-", 1, 2, 3, "+", 0, ".", "=" ];
+  const operators = ["C", "%", "Del", "/", "x", "-", "+", "="];
+  const handlePress = (button: string | number) => {
+    if (button === "=") {
       try {
-        const result = eval(displayValue.replace("x", "*"));
-        setDisplayValue(result.toString());
-        setIsResult(true);
-      } catch {
-        setDisplayValue("Error");
-        setIsResult(true);
+        const result = pressButton.replace("x", "*");
+        setPressButton(eval(result).toString());
+      } catch (error) {
+        setPressButton("Error");
       }
+    } else if (button === "C") {
+      setPressButton("0");
+    } else if (button === "Del") {
+      setPressButton((prev) => (prev.length > 1 ? prev.slice(0, -1) : "0")); // Remove last character, or reset to "0" if empty
     } else {
-      if (isResult && typeof button === "number") {
-        setDisplayValue(button.toString());
-      } else {
-        setDisplayValue((prev) =>
-          isResult ? button.toString() : prev + button.toString()
-        );
-      }
-      setIsResult(false);
+      setPressButton((prev) =>
+        prev === "0" ? String(button) : prev + String(button)
+      );
     }
   };
-
   return (
     <View style={styles.container}>
       <View style={styles.displayContainer}>
         <TextInput
-          value={displayValue}
           placeholder="0"
-          placeholderTextColor="#aaa"
-          style={styles.display}
+          value={pressButton}
+          placeholderTextColor={"#fff"}
           editable={false}
+          style={styles.display}
         />
       </View>
-
       <View style={styles.buttonsContainer}>
-        {[
-          ["C", "±", "%", "/"],
-          [7, 8, 9, "x"],
-          [4, 5, 6, "-"],
-          [1, 2, 3, "+"],
-          [0, ".", "="],
-        ].map((row, rowIndex) => (
-          <View style={styles.buttonRow} key={rowIndex}>
-            {row.map((button, buttonIndex) => (
-              <TouchableOpacity
-                onPress={() => handleButtonPress(button)}
-                style={[styles.button, button === 0 && styles.zeroButton]}
-                key={buttonIndex}
-              >
-                <Text style={styles.buttonText}>{button}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+        {buttons.map((button, ind) => (
+          <TouchableOpacity
+            onPress={() => handlePress(button)}
+            key={ind}
+            style={[
+              styles.button,
+              button === 0 && styles.zeroButton,
+              ind % 4 === 3 && { marginRight: 0 },
+              operators?.includes(button) && styles?.operatorButton
+            ]}
+          >
+            <Text style={styles.buttonText}>{button}</Text>
+          </TouchableOpacity>
         ))}
       </View>
     </View>
@@ -101,12 +88,9 @@ const styles = StyleSheet.create({
   },
   buttonsContainer: {
     width: "100%",
-    flexDirection: "column",
-  },
-  buttonRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 10,
   },
   button: {
     backgroundColor: "#333",
@@ -115,6 +99,16 @@ const styles = StyleSheet.create({
     width: width * 0.2,
     height: width * 0.2,
     borderRadius: width * 0.1,
+    margin: 5,
+  },
+  operatorButton: {
+    backgroundColor: "#FE9E0B",
+    justifyContent: "center",
+    alignItems: "center",
+    width: width * 0.2,
+    height: width * 0.2,
+    borderRadius: width * 0.1,
+    margin: 5,
   },
   zeroButton: {
     width: width * 0.45,
